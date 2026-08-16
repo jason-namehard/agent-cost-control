@@ -1,0 +1,9 @@
+# 运行时数据目录（脚本自动生成，不纳入版本控制）
+inbox/
+outbox/
+sessions/
+board/
+
+# Python
+__pycache__/
+*.pyc
