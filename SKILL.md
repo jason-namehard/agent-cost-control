@@ -140,6 +140,19 @@ python oc_watchdog.py --workdir <项目目录> --timeout 600 \
 - opencode run 无中间输出(被 tail 缓冲),卡死判断靠文件 mtime,别等输出
 - PYTHONPATH 指向 Hermes venv 会污染其他解释器(py=3.13 加载 cp311 numpy 崩溃);用户工具用 run.bat(Hermes venv python)规避
 - 派活前验证 agent 可跑:opencode run '回复 OK' / codex exec '回复 OK'(各约 1 万 token 冒烟)
+- **bash 包装导致 handoff 静默失效(2026-08-16 实战)**:`--cmd bash -lc "opencode run ..."` 时 cmd[0]=bash,
+  detect_agent 旧版只看 cmd[0] → "未识别 agent 类型" → 续接脚本从未生成。**v2.1 已修(全命令扫描)**;
+  派活结束后必须确认输出出现 `[watchdog] 续接脚本:` 一行,没有就是 handoff 又断了
+- **CLI 显示的 session ID 是截断的(2026-08-16 实战)**:`opencode session list` 截断显示(如
+  `ses_ff4adf058ffeQ3Ks` 实为 `ses_ff4adf058ffeQ3KsVxqs44Ku0R`),用截断 ID 续接必报 Session not found。
+  **续接用完整 ID**:从 session_handoff.py 输出或 `opencode session list --format json` 拿
+- **GitHub 被墙环境下 OC 会卡死在联网调研(2026-08-16 实战)**:派活 1 全程查文档 70 秒零产出 exit 0。
+  修复=BRIEF 铁律"禁止联网"+ API 参考本地化(SHERPA_API.md 模式)+ prompt 明示"最多试 1 次联网,失败即弃"
+- **熔断后正确处置=续接同一会话,不是开新会话(2026-08-16 实战)**:watchdog 熔断杀掉的只是当前子进程,
+  会话记录还在;`opencode run -s <完整ID> '继续完成未做完的 X'` 续接,复用前缀缓存。
+  开新会话=全价重读(本次教训:一个任务 4 次全价重读)
+- **派活结束必须向用户汇报 session 管理信息**:session ID(完整)、完成/失败点、续接 .bat 路径。
+  用户需要能介入 Agent 会话做二次修改——这是工作流设计初衷,不汇报等于没做
 
 ## 配套脚本
 

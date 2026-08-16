@@ -61,13 +61,17 @@ def _kill_tree(proc):
 
 
 def detect_agent(cmd):
-    """从启动命令推断 agent 类型(opencode→oc, codex→codex)。"""
+    """从启动命令推断 agent 类型(opencode→oc, codex→codex)。
+
+    v2.1 修复: 命令经 bash -lc 包装时 cmd[0] 是 "bash"，原逻辑失效导致
+    handoff 静默跳过、续接脚本从未生成。改为全命令扫描。
+    """
     if not cmd:
         return None
-    first = os.path.basename(cmd[0]).lower()
-    if "opencode" in first:
+    joined = " ".join(cmd).lower()
+    if "opencode" in joined:
         return "oc"
-    if "codex" in first:
+    if "codex" in joined:
         return "codex"
     return None
 
